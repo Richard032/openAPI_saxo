@@ -1,14 +1,26 @@
 # openAPI_saxo
 
-A small Python client foundation for Saxo OpenAPI. It handles the gateway URL and bearer-token
-header; obtain and refresh OAuth tokens through the OAuth flow configured for your Saxo application.
+A read-only Saxo OpenAPI demo project. The TypeScript service in [`web/`](web/README.md) handles the
+simulation OAuth flow and checks the authenticated connection. A small Python client foundation is
+also retained in `src/openapi_saxo` for local API experiments.
 
-## Requirements
+## TypeScript demo service
+
+See [`web/README.md`](web/README.md) for its setup, Saxo app settings, secure environment variables,
+and Hostinger deployment requirements. The service currently supports Saxo simulation only and does
+not place trades.
+
+## Python client foundation
+
+The Python client in `src/openapi_saxo` accepts an access token supplied by the calling application.
+It does not implement OAuth authorization or refresh.
+
+### Requirements
 
 - Python 3.12 or later
 - [`uv`](https://docs.astral.sh/uv/)
 
-## Set up
+### Set up
 
 From the repository root:
 
@@ -16,7 +28,7 @@ From the repository root:
 UV_CACHE_DIR=/tmp/openapi-saxo-uv-cache uv sync --frozen --all-groups --link-mode=copy
 ```
 
-## Use
+### Use
 
 Pass an access token supplied by your application at runtime. Do not commit tokens to the repository.
 
@@ -33,7 +45,7 @@ Use `SaxoEnvironment.LIVE` only with an access token intended for the live envir
 does not implement OAuth authorization or refresh; those steps depend on your Saxo application
 registration.
 
-## Validate
+### Validate
 
 ```sh
 UV_CACHE_DIR=/tmp/openapi-saxo-uv-cache uv run pytest

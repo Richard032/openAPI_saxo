@@ -1,4 +1,6 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import express, { type NextFunction, type Request, type Response } from "express";
 import { config } from "./config.js";
 import {
@@ -96,14 +98,6 @@ app.get("/healthz", (_request, response) => {
   response.json({ ok: true });
 });
 
-app.get("/", (_request, response) => {
-  response.type("html").send(
-    "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><title>Saxo demo</title>" +
-      "<h1>Saxo OpenAPI demo service</h1><p>Simulation environment, read-only connection.</p>" +
-      "<p>Use the protected <code>/auth/saxo/start</code> route to connect the owner account.</p>",
-  );
-});
-
 app.get("/auth/saxo/start", requireAdmin, (_request, response) => {
   const state = randomBytes(32).toString("hex");
   response.setHeader(
@@ -130,10 +124,7 @@ app.get("/oauth/callback", async (request, response) => {
 
   try {
     tokens = await exchangeAuthorizationCode(code);
-    response.type("html").send(
-      "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><title>Saxo connected</title>" +
-        "<h1>Saxo simulation connected</h1><p>The token is held by the server and was not sent to this page.</p>",
-    );
+    response.redirect(303, "/?connected=1");
   } catch {
     response.status(502).send("Saxo token exchange failed. Check the server configuration and try again.");
   }
@@ -147,6 +138,11 @@ app.get("/api/saxo/status", requireAdmin, (_request, response) => {
 });
 
 app.get("/api/saxo/connection/check", requireAdmin, async (_request, response) => {
+  if (!tokens) {
+    response.json({ connected: false });
+    return;
+  }
+
   try {
     const accessToken = await currentAccessToken();
     const connected = await checkSaxoConnection(accessToken);
@@ -160,6 +156,9 @@ app.get("/api/saxo/connection/check", requireAdmin, async (_request, response) =
     response.status(502).json({ connected: false, message: "Saxo connection check failed." });
   }
 });
+
+const clientBuildDirectory = resolve(dirname(fileURLToPath(import.meta.url)), "public");
+app.use(express.static(clientBuildDirectory));
 
 app.listen(config.port, "0.0.0.0", () => {
   console.info(`Saxo demo listening on port ${config.port}`);

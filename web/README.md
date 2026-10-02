@@ -1,8 +1,9 @@
-# Saxo demo web service
+# Saxo demo app
 
-This TypeScript/Node service is the server side of the demo on `saxodemo.dotpro.ch`. The first
-milestone completes Saxo's simulation OAuth flow and checks the authenticated connection. It does
-not place trades or expose the access token to a browser.
+This React and TypeScript app is the first version of the demo for `saxodemo.dotpro.ch`. The React
+dashboard is served by an Express server, which handles Saxo's simulation OAuth flow and keeps
+credentials and tokens off the browser. The current dashboard is a UI shell: it does not yet load
+quotes or historical prices, and it does not place trades.
 
 ## Saxo app settings
 
@@ -34,9 +35,16 @@ cp .env.example .env
 ```
 
 Put the app key and secret in `.env` locally. Keep `.env` private; it is ignored by Git. Set a long,
-unique admin password. Start in development mode with `npm run dev`, then open
-`http://localhost:3000/auth/saxo/start` and enter the admin credentials when prompted. The local
-callback must also be registered in the Saxo app before this flow can complete.
+unique admin password. Run the backend and React dev server in two terminals:
+
+```sh
+npm run dev:server
+npm run dev:client
+```
+
+Open `http://localhost:5173`. The Vite server forwards API and OAuth routes to Express on port 3000.
+For a local OAuth test, set `SAXO_REDIRECT_URI=http://localhost:3000/oauth/callback` and register
+that exact callback in the Saxo app.
 
 ## Routes
 
@@ -54,9 +62,10 @@ encrypted persistent token store before relying on this service continuously.
 
 ## Hostinger deployment
 
-Deploy this as a Node.js application on the `saxodemo.dotpro.ch` subdomain only if the Hostinger plan
-provides a Node.js runtime. Configure these values through the host's server-side environment
-settings, not a WordPress page or browser bundle:
+Create a Node.js web app for `saxodemo.dotpro.ch` from the GitHub repository. Use the `web` root
+directory and an Express/Node.js framework preset, since Express serves the built React interface as
+well as the API. Use Node.js 20 or later. Configure these values through Hostinger's server-side
+environment settings, not a WordPress page or browser bundle:
 
 - `NODE_ENV=production`
 - `PORT` (use the port assigned by the host)
@@ -66,9 +75,10 @@ settings, not a WordPress page or browser bundle:
 - `SAXO_ADMIN_USER`
 - `SAXO_ADMIN_PASSWORD` (at least 20 characters)
 
-Build with `npm ci && npm run build` and start with `npm start`. If this Hostinger plan cannot run
-Node.js, keep WordPress on `dotpro.ch` and deploy the TypeScript service to a Node-capable host,
-pointing `saxodemo.dotpro.ch` there with DNS.
+Build with `npm ci && npm run build` and start with `npm start`. If the framework setup asks for an
+output directory, the Vite interface is emitted under `dist/public`; the Express server starts from
+`dist/server.js` and serves that directory. If the Hostinger setup asks for an entry file, use
+`dist/server.js` after the build completes.
 
 This prototype's administration routes are protected by HTTP Basic authentication. Use them only over
 HTTPS. Do not expose the owner-authorized connection or Saxo market data publicly until Saxo's

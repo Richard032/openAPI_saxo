@@ -54,11 +54,17 @@ that exact callback in the Saxo app.
 - `GET /api/saxo/status` reports whether an owner account is connected; it requires HTTP Basic auth.
 - `GET /api/saxo/connection/check` verifies the session through Saxo's logged-in client endpoint.
   It returns only a connected flag and requires HTTP Basic auth.
+- `POST /api/saxo/disconnect` clears the in-memory tokens; it requires HTTP Basic auth and a
+  same-origin request. The dashboard calls it from the red **Disconnect Saxo** button and makes a
+  best-effort request when a connected tab is closed or navigated away from.
 
 All credentials and token responses stay on the server. The client secret, access token, refresh
 token, and Saxo account data are never returned to browser JavaScript or written to logs. The current
-prototype keeps tokens in process memory, so restart or redeployment requires reconnecting. Add an
-encrypted persistent token store before relying on this service continuously.
+prototype keeps one shared connection in process memory, so closing any demo tab attempts to clear it,
+and restart or redeployment requires reconnecting. Browser shutdown requests can fail to reach the
+server, so the tab-close disconnect is best-effort. It clears this demo's token copy; it does not
+revoke Saxo's app authorization. Add an encrypted persistent token store before relying on this
+service continuously.
 
 ## Hostinger deployment
 

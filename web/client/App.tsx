@@ -1,6 +1,7 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 const initialSymbols = ["AAPL", "MSFT", "NVDA"];
+type ConnectionState = "checking" | "connected" | "disconnected";
 
 function App() {
   const [symbols, setSymbols] = useState(initialSymbols);
@@ -10,6 +11,61 @@ function App() {
     () => new URLSearchParams(window.location.search).get("connected") === "1",
     [],
   );
+  const justDisconnected = useMemo(
+    () => new URLSearchParams(window.location.search).get("disconnected") === "1",
+    [],
+  );
+  const [connectionState, setConnectionState] = useState<ConnectionState>(() =>
+    justConnected ? "connected" : justDisconnected ? "disconnected" : "checking",
+  );
+  const disconnectRequestInFlight = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadConnectionStatus() {
+      try {
+        const response = await fetch("/api/saxo/status", {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        if (!active) return;
+        if (!response.ok) {
+          setConnectionState(justConnected ? "connected" : "disconnected");
+          return;
+        }
+        const result: { connected?: boolean } = await response.json();
+        setConnectionState(result.connected ? "connected" : "disconnected");
+      } catch {
+        if (active) setConnectionState(justConnected ? "connected" : "disconnected");
+      }
+    }
+
+    void loadConnectionStatus();
+    return () => {
+      active = false;
+    };
+  }, [justConnected]);
+
+  useEffect(() => {
+    if (connectionState !== "connected") return;
+
+    function disconnectWhenLeaving() {
+      if (disconnectRequestInFlight.current) return;
+      void fetch("/api/saxo/disconnect", {
+        method: "POST",
+        credentials: "same-origin",
+        keepalive: true,
+        headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        body: "tab-closed",
+      }).catch(() => {
+        // Closing a tab is best-effort; the server also drops tokens on restart or expiry.
+      });
+    }
+
+    window.addEventListener("pagehide", disconnectWhenLeaving);
+    return () => window.removeEventListener("pagehide", disconnectWhenLeaving);
+  }, [connectionState]);
 
   function addSymbol(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,12 +91,14 @@ function App() {
       });
       if (response.ok) {
         const result: { connected?: boolean } = await response.json();
+        setConnectionState(result.connected ? "connected" : "disconnected");
         setMessage(
           result.connected
             ? "Saxo simulation is connected."
             : "Saxo is not connected yet. Use Connect Saxo to authorize the simulation account.",
         );
       } else if (response.status === 401) {
+        setConnectionState("disconnected");
         setMessage("Connect your Saxo simulation account to continue.");
       } else {
         setMessage("The Saxo connection check failed. Try again shortly.");
@@ -49,6 +107,38 @@ function App() {
       setMessage("Could not reach the demo server. Try again shortly.");
     }
   }
+
+  async function disconnectSaxo() {
+    disconnectRequestInFlight.current = true;
+    setMessage("Disconnecting Saxo from this demo…");
+    try {
+      const response = await fetch("/api/saxo/disconnect", {
+        method: "POST",
+        credentials: "same-origin",
+        keepalive: true,
+        headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        body: "button",
+      });
+      if (response.ok) {
+        setConnectionState("disconnected");
+        setMessage("Saxo disconnected. The demo cleared its in-memory tokens.");
+      } else if (response.status === 401) {
+        setMessage("The demo admin sign-in expired. Connect again to sign in, then retry disconnecting.");
+      } else {
+        setMessage("Could not disconnect Saxo. Try again shortly.");
+      }
+    } catch {
+      setMessage("Could not reach the demo server to disconnect Saxo.");
+    } finally {
+      disconnectRequestInFlight.current = false;
+    }
+  }
+
+  const connectionLabel = {
+    checking: "Checking connection…",
+    connected: "Connected to simulation",
+    disconnected: "Not connected",
+  }[connectionState];
 
   return (
     <div className="app-shell">
@@ -73,6 +163,11 @@ function App() {
             Saxo simulation connected. Your tokens remain on the server.
           </div>
         )}
+        {justDisconnected && (
+          <div className="notice success" role="status">
+            Saxo was disconnected from this demo. Its in-memory tokens were cleared.
+          </div>
+        )}
         {message && <div className="notice" role="status">{message}</div>}
 
         <section className="welcome-row">
@@ -85,19 +180,29 @@ function App() {
           </div>
           <div className="connect-card">
             <div className="connect-copy">
-              <span className="status-dot" />
+              <span className={`status-dot status-dot-${connectionState}`} />
               <div>
                 <strong>Owner connection</strong>
-                <span>Not checked yet</span>
+                <span>{connectionLabel}</span>
               </div>
             </div>
             <button className="button button-secondary" onClick={checkConnection} type="button">
               Check connection
             </button>
-            <a className="button button-primary" href="/auth/saxo/start">
-              Connect Saxo
-              <span aria-hidden="true">↗</span>
-            </a>
+            {connectionState === "connected" ? (
+              <button className="button button-danger" onClick={disconnectSaxo} type="button">
+                Disconnect Saxo
+              </button>
+            ) : connectionState === "checking" ? (
+              <button className="button button-primary" disabled type="button">
+                Checking…
+              </button>
+            ) : (
+              <a className="button button-primary" href="/auth/saxo/start">
+                Connect Saxo
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
           </div>
         </section>
 
@@ -173,9 +278,9 @@ function App() {
                   <li>Open this demo and click <strong>Connect Saxo</strong>.</li>
                   <li>At the browser's Basic Authentication prompt, enter the demo admin username and password configured in Hostinger.</li>
                   <li>Sign in on Saxo's Simulation page with your Saxo account and authorize the app.</li>
-                  <li>Saxo returns to the callback URL. The demo should report that Saxo simulation is connected; use <strong>Check connection</strong> to verify it.</li>
+                  <li>Saxo returns to the callback URL. The button turns red and reads <strong>Disconnect Saxo</strong>; use <strong>Check connection</strong> to verify the session.</li>
                 </ol>
-                <p className="setup-note">A server restart or redeployment clears this prototype's in-memory tokens, so connect again afterward. This step authorizes the account; live quotes and price history still need their Saxo API endpoints and market-data permissions to be added.</p>
+                <p className="setup-note">Closing or leaving a demo tab sends a best-effort request to clear the shared in-memory tokens; browsers cannot guarantee delivery during an abrupt shutdown, and closing one tab disconnects the demo in other tabs too. This clears the demo's session but does not revoke Saxo app consent. A server restart or redeployment also clears the tokens. Live quotes and price history still need their Saxo API endpoints and market-data permissions to be added.</p>
               </div>
             </article>
           </div>

@@ -52,6 +52,21 @@ function requireAdmin(request: Request, response: Response, next: NextFunction):
   next();
 }
 
+function requireSameOrigin(request: Request, response: Response, next: NextFunction): void {
+  const origin = request.header("origin");
+  const appOrigin = new URL(config.redirectUri).origin;
+  const localDevelopmentOrigins = new Set([
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+  ]);
+  const allowed = origin === appOrigin || (!config.isProduction && localDevelopmentOrigins.has(origin ?? ""));
+  if (!allowed) {
+    response.sendStatus(403);
+    return;
+  }
+  next();
+}
+
 function cookieValue(request: Request, name: string): string | undefined {
   const prefix = `${name}=`;
   return request.headers.cookie
@@ -131,10 +146,12 @@ app.get("/oauth/callback", async (request, response) => {
 });
 
 app.get("/api/saxo/status", requireAdmin, (_request, response) => {
-  response.json({
-    connected: tokens !== null,
-    accessTokenExpiresAt: tokens ? new Date(tokens.accessTokenExpiresAt).toISOString() : null,
-  });
+  response.json({ connected: tokens !== null });
+});
+
+app.post("/api/saxo/disconnect", requireSameOrigin, requireAdmin, (_request, response) => {
+  tokens = null;
+  response.json({ connected: false });
 });
 
 app.get("/api/saxo/connection/check", requireAdmin, async (_request, response) => {

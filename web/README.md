@@ -75,10 +75,10 @@ environment settings, not a WordPress page or browser bundle:
 - `SAXO_ADMIN_USER`
 - `SAXO_ADMIN_PASSWORD` (at least 20 characters)
 
-Build with `npm ci && npm run build` and start with `npm start`. If the framework setup asks for an
-output directory, the Vite interface is emitted under `dist/public`; the Express server starts from
-`dist/server.js` and serves that directory. If the Hostinger setup asks for an entry file, use
-`dist/server.js` after the build completes.
+The package's `postinstall` hook runs `npm run build`, so Hostinger can generate the entry file even
+when its deploy settings show no separate build command. The React interface is emitted under
+`dist/public`; the Express server starts from `dist/server.js` and serves that directory. Set the
+Hostinger entry file to `dist/server.js`.
 
 This prototype's administration routes are protected by HTTP Basic authentication. Use them only over
 HTTPS. Do not expose the owner-authorized connection or Saxo market data publicly until Saxo's

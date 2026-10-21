@@ -1,13 +1,13 @@
-import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import { MarketPanels } from "./MarketPanels";
 import { SetupGuide } from "./SetupGuide";
+import type { MarketData } from "./useMarketData";
+import type { ConnectionState } from "./useSaxoConnection";
 
 type Tab = "market" | "setup";
 type Props = {
-  symbols: string[];
-  newSymbol: string;
-  onNewSymbolChange: (value: string) => void;
-  onAddSymbol: (event: FormEvent<HTMLFormElement>) => void;
+  market: MarketData;
+  connection: ConnectionState;
 };
 
 export function ContentTabs(props: Props) {

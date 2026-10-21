@@ -2,8 +2,8 @@
 
 This React and TypeScript app is the first version of the demo for `saxodemo.dotpro.ch`. The React
 dashboard is served by an Express server, which handles Saxo's simulation OAuth flow and keeps
-credentials and tokens off the browser. The current dashboard is a UI shell: it does not yet load
-quotes or historical prices, and it does not place trades.
+credentials and tokens off the browser. The market panel searches Saxo stock listings, loads quote
+snapshots, and charts daily closing prices. It does not place trades or generate forecasts.
 
 ## Saxo app settings
 
@@ -27,7 +27,32 @@ refresh flow. The service uses those endpoints:
 
 ## Local development
 
-Use Node.js 20 or later.
+### Visual Studio 2026 Professional (Windows)
+
+Open a PowerShell window in the repository root and run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\setup-visual-studio.ps1
+```
+
+The script uses the Node.js and npm tools included with Visual Studio's **Node.js development**
+workload. It installs the exact libraries in `web/package-lock.json` and creates `web/.env` if needed.
+The local settings file starts with placeholder credentials and is ignored by Git.
+
+Open `openAPI_saxo.sln` in Visual Studio. Set **SaxoDemo** as the startup project and choose
+**Saxo demo: server + browser** in the Start dropdown, then press **F5**. This starts the Express API,
+the Vite React server, and Microsoft Edge together. The page opens at `http://localhost:5173`.
+Set breakpoints in `web/src` for the server and `web/client` for the browser. Stop debugging with
+**Shift+F5**. **Build > Build Solution** runs the TypeScript checks and production bundle.
+
+To test the Saxo login, edit `web/.env` with your own Saxo app key and secret and a private admin
+password of at least 20 characters. Register the exact callback
+`http://localhost:3000/oauth/callback` in your Saxo Simulation app. Keep your production callback
+registered as well. Saxo credentials are entered on Saxo's sign-in page after you click Connect.
+
+### Other editors or command line
+
+Use Node.js 20 or later with npm installed.
 
 ```sh
 npm ci
@@ -54,17 +79,32 @@ that exact callback in the Saxo app.
 - `GET /api/saxo/status` reports whether an owner account is connected; it requires HTTP Basic auth.
 - `GET /api/saxo/connection/check` verifies the session through Saxo's logged-in client endpoint.
   It returns only a connected flag and requires HTTP Basic auth.
+- `GET /api/market/stocks?q=AAPL` searches stock listings available to the connected Saxo user.
+- `GET /api/market/quote?uic=...` returns a normalized quote snapshot for a Saxo stock ID.
+- `GET /api/market/history?uic=...` returns up to 260 daily closes for that stock ID.
+  All three market routes require HTTP Basic auth and an active Saxo connection.
 - `POST /api/saxo/disconnect` clears the in-memory tokens; it requires HTTP Basic auth and a
   same-origin request. The dashboard calls it from the red **Disconnect Saxo** button and makes a
   best-effort request when a connected tab is closed or navigated away from.
 
-All credentials and token responses stay on the server. The client secret, access token, refresh
-token, and Saxo account data are never returned to browser JavaScript or written to logs. The current
+All credentials and token responses stay on the server. The client secret, access token, and refresh
+token are never returned to browser JavaScript or written to logs. Stock listings and prices are
+returned to the authenticated browser to display the watchlist and chart. The current
 prototype keeps one shared connection in process memory, so closing any demo tab attempts to clear it,
 and restart or redeployment requires reconnecting. Browser shutdown requests can fail to reach the
 server, so the tab-close disconnect is best-effort. It clears this demo's token copy; it does not
 revoke Saxo's app authorization. Add an encrypted persistent token store before relying on this
 service continuously.
+
+## Market panel
+
+After connecting Saxo, the starter AAPL, MSFT, and NVDA symbols are added only if Saxo confirms their
+exact Nasdaq listings. To add another stock, search by ticker or name and select a result returned by
+Saxo. An unknown symbol is not added; a ticker alone is not enough to identify its exchange listing. The
+selected listing supplies Saxo's UIC to the quote and chart requests. Quotes refresh every minute or
+when **Refresh prices** is clicked. The chart shows up to 260 daily close samples. Saxo may supply
+delayed data or refuse a quote depending on the simulation account's market-data permissions. The
+watchlist is currently browser memory only, so manually added listings disappear on reload.
 
 ## Hostinger deployment
 

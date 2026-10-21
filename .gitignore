@@ -11,3 +11,6 @@ build/
 !.env.example
 node_modules/
 web/dist/
+.vs/
+web/obj/
+*.esproj.user

@@ -1,30 +1,11 @@
-import { useState, type FormEvent } from "react";
 import { ConnectionCard } from "./ConnectionCard";
 import { ContentTabs } from "./ContentTabs";
+import { useMarketData } from "./useMarketData";
 import { useSaxoConnection } from "./useSaxoConnection";
-
-const initialSymbols = ["AAPL", "MSFT", "NVDA"];
 
 function App() {
   const saxo = useSaxoConnection();
-  const [symbols, setSymbols] = useState(initialSymbols);
-  const [newSymbol, setNewSymbol] = useState("");
-
-  function addSymbol(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const symbol = newSymbol.trim().toUpperCase();
-    if (!/^[A-Z][A-Z0-9.-]{0,9}$/.test(symbol)) {
-      saxo.setMessage("Enter a ticker symbol, for example AAPL.");
-      return;
-    }
-    if (symbols.includes(symbol)) {
-      saxo.setMessage(symbol + " is already on your list.");
-      return;
-    }
-    setSymbols((current) => [...current, symbol]);
-    setNewSymbol("");
-    saxo.setMessage(symbol + " added to this browser's watchlist.");
-  }
+  const market = useMarketData(saxo.state);
 
   return (
     <div className="app-shell">
@@ -64,12 +45,7 @@ function App() {
           />
         </section>
 
-        <ContentTabs
-          symbols={symbols}
-          newSymbol={newSymbol}
-          onNewSymbolChange={setNewSymbol}
-          onAddSymbol={addSymbol}
-        />
+        <ContentTabs market={market} connection={saxo.state} />
       </main>
 
       <footer className="footer">

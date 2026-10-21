@@ -110,6 +110,30 @@ td strong { font-weight: 700; }
 .muted { color: #a6afb7; }
 .pending-tag { color: #8a949d; padding: 5px 7px; font-size: 9px; }
 .panel-footnote { margin: 14px 0 0; color: #929ca5; font-size: 10px; line-height: 1.5; }
+.search-results { max-height: 215px; overflow-y: auto; margin: -4px 0 13px; padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: #fbfcfc; }
+.search-results > strong { display: block; margin: 0 0 7px; font-size: 11px; }
+.search-results button { display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 8px; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; text-align: left; font-size: 11px; }
+.search-results button:hover, .search-results button:focus-visible { background: #eff8df; }
+.search-results button small { flex-shrink: 0; color: var(--muted); }
+.market-message { margin: -3px 0 12px; color: #626f78; font-size: 11px; }
+.empty-watchlist { padding: 20px 8px; color: #87929c; line-height: 1.5; }
+.stock-label, .quote-cell { display: inline-flex; flex-direction: column; gap: 2px; vertical-align: middle; }
+.stock-label small, .quote-cell small { color: #87929c; font-size: 9px; white-space: nowrap; }
+.stock-label small { max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+.quote-cell small { white-space: normal; }
+.selected-stock { background: #f8fbf3; }
+.positive-change { color: #198650; font-weight: 700; }
+.negative-change { color: #bd4752; font-weight: 700; }
+.market-error { color: #af4c49; font-size: 11px; }
+.market-error small { max-width: 150px; color: #af4c49; white-space: normal; }
+.text-button { padding: 4px 0; border: 0; background: transparent; color: #506d27; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; font-size: 11px; white-space: nowrap; }
+.text-button:disabled { color: #9ba5ad; cursor: not-allowed; }
+.chart-caption { margin: 15px 0 -4px; color: #64717d; font-size: 11px; }
+.history-chart { margin-top: 18px; padding: 13px 13px 9px; border-radius: 10px; background: #f8f9fa; }
+.chart-range, .chart-dates { display: flex; justify-content: space-between; color: #82909a; font-size: 10px; }
+.history-chart svg { display: block; width: 100%; height: 224px; margin: 2px 0; overflow: visible; }
+.history-chart line { stroke: #e2e7eb; stroke-dasharray: 4 5; stroke-width: 1; }
+.history-chart polyline { fill: none; stroke: #639727; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .period-select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; color: #8a959e; background: #fff; font-size: 11px; }
 .chart-empty { position: relative; height: 235px; margin-top: 21px; overflow: hidden; border-radius: 10px; background: #f8f9fa; }
 .chart-grid-lines { position: absolute; inset: 17px 14px 35px; display: flex; flex-direction: column; justify-content: space-between; }

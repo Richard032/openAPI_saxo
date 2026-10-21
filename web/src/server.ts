@@ -239,9 +239,13 @@ app.get("/api/market/history", requireAdmin, async (request, response) => {
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));
 const httpServer = createHttpServer(app);
 
-if (config.isProduction) {
-  app.use(express.static(resolve(sourceDirectory, "public")));
-} else {
+function listen(): void {
+  httpServer.listen(config.port, "0.0.0.0", () => {
+    console.info(`Saxo demo listening on port ${config.port}`);
+  });
+}
+
+async function startDevelopmentServer(): Promise<void> {
   // Vite serves React and its source maps through the same HTTP server as the API.
   const { createServer: createViteServer } = await import("vite");
   const vite = await createViteServer({
@@ -250,8 +254,15 @@ if (config.isProduction) {
     server: { middlewareMode: true, hmr: { server: httpServer } },
   });
   app.use(vite.middlewares);
+  listen();
 }
 
-httpServer.listen(config.port, "0.0.0.0", () => {
-  console.info(`Saxo demo listening on port ${config.port}`);
-});
+if (config.isProduction) {
+  app.use(express.static(resolve(sourceDirectory, "public")));
+  listen();
+} else {
+  void startDevelopmentServer().catch((error: unknown) => {
+    console.error("Could not start the development server:", error);
+    process.exitCode = 1;
+  });
+}

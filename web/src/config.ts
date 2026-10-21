@@ -1,4 +1,9 @@
 import "dotenv/config";
+import { extname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+// Hostinger can load the compiled entry file without setting NODE_ENV.
+const isProduction = process.env.NODE_ENV === "production" || extname(fileURLToPath(import.meta.url)) === ".js";
 
 function required(name: string): string {
   const value = process.env[name]?.trim();
@@ -10,7 +15,7 @@ function required(name: string): string {
 
 function validHttpsUrl(name: string, value: string): string {
   const parsed = new URL(value);
-  if (parsed.protocol !== "https:" && process.env.NODE_ENV === "production") {
+  if (parsed.protocol !== "https:" && isProduction) {
     throw new Error(`${name} must use HTTPS in production`);
   }
   return value;
@@ -21,7 +26,7 @@ validHttpsUrl("SAXO_REDIRECT_URI", redirectUri);
 
 export const config = {
   port: Number(process.env.PORT ?? "3000"),
-  isProduction: process.env.NODE_ENV === "production",
+  isProduction,
   clientId: required("SAXO_CLIENT_ID"),
   clientSecret: required("SAXO_CLIENT_SECRET"),
   redirectUri,

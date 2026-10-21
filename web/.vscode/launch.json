@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Saxo API server",
+      "name": "Saxo application server",
       "type": "node",
       "request": "launch",
       "cwd": "${workspaceFolder}",
@@ -12,28 +12,18 @@
       "sourceMaps": true
     },
     {
-      "name": "React development server",
-      "type": "node",
-      "request": "launch",
-      "cwd": "${workspaceFolder}",
-      "runtimeExecutable": "C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Microsoft/VisualStudio/NodeJs/node.exe",
-      "program": "${workspaceFolder}/node_modules/vite/bin/vite.js",
-      "args": ["--host", "localhost"]
-    },
-    {
       "name": "Saxo demo in Edge",
       "type": "edge",
       "request": "launch",
-      "url": "http://localhost:5173",
-      "webRoot": "${workspaceFolder}/client"
+      "url": "http://localhost:3000/",
+      "webRoot": "${workspaceFolder}"
     }
   ],
   "compounds": [
     {
       "name": "Saxo demo: server + browser",
       "configurations": [
-        "Saxo API server",
-        "React development server",
+        "Saxo application server",
         "Saxo demo in Edge"
       ],
       "stopAll": true

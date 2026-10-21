@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.4338480">
   <PropertyGroup>
     <ShouldRunNpmInstall>false</ShouldRunNpmInstall>
-    <StartupCommand>set "PATH=$(MSBuildExtensionsPath)\Microsoft\VisualStudio\NodeJs;%PATH%" &amp;&amp; "$(MSBuildExtensionsPath)\Microsoft\VisualStudio\NodeJs\npm.cmd" run dev:client</StartupCommand>
     <BuildCommand>set "PATH=$(MSBuildExtensionsPath)\Microsoft\VisualStudio\NodeJs;%PATH%" &amp;&amp; "$(MSBuildExtensionsPath)\Microsoft\VisualStudio\NodeJs\npm.cmd" run build</BuildCommand>
   </PropertyGroup>
 </Project>

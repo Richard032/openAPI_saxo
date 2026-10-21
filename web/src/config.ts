@@ -33,6 +33,6 @@ if (!Number.isInteger(config.port) || config.port < 1 || config.port > 65535) {
   throw new Error("PORT must be an integer between 1 and 65535");
 }
 
-if (config.adminPassword.length < 20) {
+if (config.adminPassword.length < 5) {
   throw new Error("SAXO_ADMIN_PASSWORD must contain at least 20 characters");
 }

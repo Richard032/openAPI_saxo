@@ -76,7 +76,7 @@ export function SetupGuide() {
               <li>Sign in on Saxo's Simulation page with your Saxo account and authorize the app.</li>
               <li>Saxo returns to the callback URL. The button turns red and reads <strong>Disconnect Saxo</strong>; use <strong>Check connection</strong> to verify the session.</li>
             </ol>
-            <p className="setup-note">Closing or leaving a demo tab sends a best-effort request to clear the shared in-memory tokens; browsers cannot guarantee delivery during an abrupt shutdown, and closing one tab disconnects the demo in other tabs too. This clears the demo's session but does not revoke Saxo app consent. A server restart or redeployment also clears the tokens. Live quotes and price history still need their Saxo API endpoints and market-data permissions to be added.</p>
+            <p className="setup-note">Closing or leaving a demo tab sends a best-effort request to clear the shared in-memory tokens; browsers cannot guarantee delivery during an abrupt shutdown, and closing one tab disconnects the demo in other tabs too. This clears the demo's session but does not revoke Saxo app consent. A server restart or redeployment also clears the tokens. Quotes and history require Saxo market-data permissions.</p>
           </div>
         </article>
       </div>

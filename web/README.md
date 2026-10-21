@@ -40,10 +40,12 @@ workload. It installs the exact libraries in `web/package-lock.json` and creates
 The local settings file starts with placeholder credentials and is ignored by Git.
 
 Open `openAPI_saxo.sln` in Visual Studio. Set **SaxoDemo** as the startup project and choose
-**Saxo demo: server + browser** in the Start dropdown, then press **F5**. This starts the Express API,
-the Vite React server, and Microsoft Edge together. The page opens at `http://localhost:5173`.
-Set breakpoints in `web/src` for the server and `web/client` for the browser. Stop debugging with
-**Shift+F5**. **Build > Build Solution** runs the TypeScript checks and production bundle.
+**Saxo demo: server + browser** in the Start dropdown, then press **F5**. One Node process serves
+both the Express API and the React page at `http://localhost:3000/`. Visual Studio launches Edge at
+that address. Set breakpoints in `web/src` for the server and `web/client` for the browser; Vite
+provides source maps and updates the page as you edit. Stop debugging with **Shift+F5**. **Build >
+Build Solution** runs the TypeScript checks and production bundle. Do not start a separate Vite server.
+If a preview is already using port 3000, stop that preview before pressing **F5**.
 
 To test the Saxo login, edit `web/.env` with your own Saxo app key and secret and a private admin
 password of at least 20 characters. Register the exact callback
@@ -60,16 +62,16 @@ cp .env.example .env
 ```
 
 Put the app key and secret in `.env` locally. Keep `.env` private; it is ignored by Git. Set a long,
-unique admin password. Run the backend and React dev server in two terminals:
+unique admin password. Start the single development server:
 
 ```sh
-npm run dev:server
-npm run dev:client
+npm run dev
 ```
 
-Open `http://localhost:5173`. The Vite server forwards API and OAuth routes to Express on port 3000.
-For a local OAuth test, set `SAXO_REDIRECT_URI=http://localhost:3000/oauth/callback` and register
-that exact callback in the Saxo app.
+Open `http://localhost:3000/`. Express handles API and OAuth routes, and Vite serves the React page
+from the same process during development. For a local OAuth test, set
+`SAXO_REDIRECT_URI=http://localhost:3000/oauth/callback` and register that exact callback in the
+Saxo app. The callback path is for Saxo's redirect; open the site root in the browser.
 
 ## Routes
 

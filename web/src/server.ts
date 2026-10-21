@@ -1,4 +1,5 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
+import { createServer as createHttpServer } from "node:http";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import express, { type NextFunction, type Request, type Response } from "express";
@@ -57,12 +58,7 @@ function requireAdmin(request: Request, response: Response, next: NextFunction):
 function requireSameOrigin(request: Request, response: Response, next: NextFunction): void {
   const origin = request.header("origin");
   const appOrigin = new URL(config.redirectUri).origin;
-  const localDevelopmentOrigins = new Set([
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-  ]);
-  const allowed = origin === appOrigin || (!config.isProduction && localDevelopmentOrigins.has(origin ?? ""));
-  if (!allowed) {
+  if (origin !== appOrigin) {
     response.sendStatus(403);
     return;
   }
@@ -147,7 +143,7 @@ app.get("/oauth/callback", async (request, response) => {
 
   try {
     tokens = await exchangeAuthorizationCode(code);
-    response.redirect(303, config.isProduction ? "/?connected=1" : "http://localhost:5173/?connected=1");
+    response.redirect(303, "/?connected=1");
   } catch {
     response.status(502).send("Saxo token exchange failed. Check the server configuration and try again.");
   }
@@ -240,9 +236,22 @@ app.get("/api/market/history", requireAdmin, async (request, response) => {
   await serveMarketData(response, (accessToken) => getStockHistory(accessToken, uic));
 });
 
-const clientBuildDirectory = resolve(dirname(fileURLToPath(import.meta.url)), "public");
-app.use(express.static(clientBuildDirectory));
+const sourceDirectory = dirname(fileURLToPath(import.meta.url));
+const httpServer = createHttpServer(app);
 
-app.listen(config.port, "0.0.0.0", () => {
+if (config.isProduction) {
+  app.use(express.static(resolve(sourceDirectory, "public")));
+} else {
+  // Vite serves React and its source maps through the same HTTP server as the API.
+  const { createServer: createViteServer } = await import("vite");
+  const vite = await createViteServer({
+    root: resolve(sourceDirectory, ".."),
+    appType: "spa",
+    server: { middlewareMode: true, hmr: { server: httpServer } },
+  });
+  app.use(vite.middlewares);
+}
+
+httpServer.listen(config.port, "0.0.0.0", () => {
   console.info(`Saxo demo listening on port ${config.port}`);
 });
